@@ -111,18 +111,54 @@ class _HomeState extends State<Home> {
       ),
       key: UniqueKey(),
       onDismissed: (direcao){
+
+        Text textoSnackbar;
+        final Map<String, dynamic> ultimaTarefaAlterada = _listaTarefas[index];
+        final statusTarefa = ultimaTarefaAlterada["realizada"];
+
         if(direcao == DismissDirection.startToEnd){
           setState(() {
             _listaTarefas.removeAt(index);
+            textoSnackbar = Text(
+              "Tarefa removida",
+              style: TextStyle(
+                color: Colors.red,
+              ),);
             _salvarArquivo();
           });
         }
-        else if(direcao == DismissDirection.endToStart){
+        else{
           setState(() {
             _listaTarefas[index]["realizada"] = true;
+            textoSnackbar = Text(
+              "Tarefa marcada como finalizada",
+              style: TextStyle(
+                  color: Colors.blue,
+              ),);
             _salvarArquivo();
           });
         }
+
+        final snackbar = SnackBar(
+          //backgroundColor: Colors.white,
+          duration: Duration(milliseconds: 1500),
+          content: textoSnackbar,
+          action: SnackBarAction(
+            label: "Desafazer",
+            onPressed: (){
+              setState(() {
+                if(direcao == DismissDirection.startToEnd)
+                  _listaTarefas.insert(index, ultimaTarefaAlterada);
+                else
+                  _listaTarefas[index]["realizada"] = statusTarefa;
+
+                _salvarArquivo();
+              });
+            },
+          ),
+        );
+
+        Scaffold.of(context).showSnackBar(snackbar);
 
       },
       child: CheckboxListTile(
