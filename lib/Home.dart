@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
@@ -12,6 +11,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
 
   List _listaTarefas = [];
+  var controllerTarefa = TextEditingController();
 
   _adicionarTarefa(BuildContext context){
     showDialog(
@@ -21,6 +21,7 @@ class _HomeState extends State<Home> {
           title: Text("Adicionar Tarefa"),
           content: TextField(
             keyboardType: TextInputType.text,
+            controller: controllerTarefa,
             decoration: InputDecoration(
               labelText: "Informe sua tarefa",
             ),
@@ -36,8 +37,10 @@ class _HomeState extends State<Home> {
             FlatButton(
               child: Text("Salvar"),
               onPressed: (){
-                _salvarArquivo();
-                Navigator.pop(context);
+                setState(() {
+                  _salvarTarefa();
+                  Navigator.pop(context);
+                });
               },
             ),
           ],
@@ -45,6 +48,16 @@ class _HomeState extends State<Home> {
       }
     );
 
+  }
+
+  _salvarTarefa() async{
+
+    Map<String, dynamic> tarefa = Map();
+    tarefa["titulo"] = controllerTarefa.text;
+    tarefa["realizada"] = false;
+    _listaTarefas.add(tarefa);
+    await _salvarArquivo();
+    controllerTarefa.text = "";
   }
 
   Future<File> _recuperarDiretorio() async{
@@ -55,13 +68,6 @@ class _HomeState extends State<Home> {
   _salvarArquivo() async {
 
     var arquivo = await _recuperarDiretorio();
-
-    //CRIAR TAREFAS
-    Map<String, dynamic> tarefa = Map();
-    tarefa["titulo"] = "Estudar";
-    tarefa["realizada"] = false;
-    _listaTarefas.add(tarefa);
-
     String dados = jsonEncode(_listaTarefas);
     arquivo.writeAsString(dados);
   }
@@ -102,8 +108,15 @@ class _HomeState extends State<Home> {
               child: ListView.builder(
                 itemCount: _listaTarefas.length,
                 itemBuilder: (context, index){
-                  return ListTile(
-                      title: Text(_listaTarefas[index]["titulo"])
+                  return CheckboxListTile(
+                    title: Text(_listaTarefas[index]["titulo"]),
+                    value: _listaTarefas[index]["realizada"],
+                    onChanged: (valor){
+                      setState(() {
+                        _listaTarefas[index]["realizada"] = valor;
+                        _salvarArquivo();
+                      });
+                    },
                   );
                 }
               ),
