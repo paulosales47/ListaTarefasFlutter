@@ -85,6 +85,60 @@ class _HomeState extends State<Home> {
 
   }
 
+  Dismissible _montarListaTarefas(BuildContext context, int index){
+
+    return Dismissible(
+      direction: DismissDirection.horizontal,
+      background: Container(
+        color: Colors.red,
+        padding: EdgeInsets.all(16),
+        child: Row(
+          children: <Widget>[
+            Icon(Icons.delete, color: Colors.white,)
+          ],
+        ),
+
+      ),
+      secondaryBackground: Container(
+          color: Colors.blue,
+          padding: EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+            Icon(Icons.done, color: Colors.white,)
+        ],
+      ),
+      ),
+      key: UniqueKey(),
+      onDismissed: (direcao){
+        if(direcao == DismissDirection.startToEnd){
+          setState(() {
+            _listaTarefas.removeAt(index);
+            _salvarArquivo();
+          });
+        }
+        else if(direcao == DismissDirection.endToStart){
+          setState(() {
+            _listaTarefas[index]["realizada"] = true;
+            _salvarArquivo();
+          });
+        }
+
+      },
+      child: CheckboxListTile(
+        title: Text(_listaTarefas[index]["titulo"]),
+        value: _listaTarefas[index]["realizada"],
+        onChanged: (valor){
+          setState(() {
+            _listaTarefas[index]["realizada"] = valor;
+            _salvarArquivo();
+          });
+        },
+      ),
+    );
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -108,16 +162,7 @@ class _HomeState extends State<Home> {
               child: ListView.builder(
                 itemCount: _listaTarefas.length,
                 itemBuilder: (context, index){
-                  return CheckboxListTile(
-                    title: Text(_listaTarefas[index]["titulo"]),
-                    value: _listaTarefas[index]["realizada"],
-                    onChanged: (valor){
-                      setState(() {
-                        _listaTarefas[index]["realizada"] = valor;
-                        _salvarArquivo();
-                      });
-                    },
-                  );
+                    return _montarListaTarefas(context, index);
                 }
               ),
 
@@ -132,4 +177,8 @@ class _HomeState extends State<Home> {
       ),
     );
   }
+
+
+
+
 }
