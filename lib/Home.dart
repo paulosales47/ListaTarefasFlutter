@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class Home extends StatefulWidget {
   @override
@@ -6,6 +10,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
+  List _listaTarefas = [];
 
   _adicionarTarefa(BuildContext context){
     showDialog(
@@ -30,7 +36,7 @@ class _HomeState extends State<Home> {
             FlatButton(
               child: Text("Salvar"),
               onPressed: (){
-
+                _salvarArquivo();
                 Navigator.pop(context);
               },
             ),
@@ -41,11 +47,49 @@ class _HomeState extends State<Home> {
 
   }
 
-  List<String> _listaTarefas = ["Estudar"];
+  Future<File> _recuperarDiretorio() async{
+    final diretorio = await getApplicationDocumentsDirectory();
+    return File("${diretorio.path}/tarefas.json");
+  }
 
+  _salvarArquivo() async {
+
+    var arquivo = await _recuperarDiretorio();
+
+    //CRIAR TAREFAS
+    Map<String, dynamic> tarefa = Map();
+    tarefa["titulo"] = "Estudar";
+    tarefa["realizada"] = false;
+    _listaTarefas.add(tarefa);
+
+    String dados = jsonEncode(_listaTarefas);
+    arquivo.writeAsString(dados);
+  }
+
+  Future<String> _lerArquivo() async{
+    try{
+
+      final arquivo = await _recuperarDiretorio();
+      return arquivo.readAsString();
+
+
+    }catch(e){
+      return null;
+    }
+
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _lerArquivo().then((dados){
+      _listaTarefas = jsonDecode(dados);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.purple,
@@ -59,7 +103,7 @@ class _HomeState extends State<Home> {
                 itemCount: _listaTarefas.length,
                 itemBuilder: (context, index){
                   return ListTile(
-                      title: Text(_listaTarefas[index])
+                      title: Text(_listaTarefas[index]["titulo"])
                   );
                 }
               ),
